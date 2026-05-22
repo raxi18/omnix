@@ -1,37 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>ABGRADE AI</title>
 
+    <!-- CSS -->
     <link rel="stylesheet" href="/style.css">
 
+    <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Orbitron:wght@600&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
 
+    <!-- BACKGROUND GLOW -->
     <div class="background-glow"></div>
 
+    <!-- MAIN CONTAINER -->
     <div class="chat-container">
 
+        <!-- HEADER -->
         <div class="logo-section">
+
+            <div class="online-dot"></div>
+
             <h1>ABGRADE</h1>
+
             <p>Evolving Intelligence</p>
+
         </div>
 
-        <div id="chat-box" class="chat-box"></div>
+        <!-- CHAT AREA -->
+        <div id="chat-box" class="chat-box">
 
+            <!-- WELCOME MESSAGE -->
+            <div class="message bot-message">
+                ⚡ Systems online. Abgrade ready.
+            </div>
+
+        </div>
+
+        <!-- TYPING INDICATOR -->
+        <div id="typing-area" class="typing-area hidden">
+
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <p>Abgrade is thinking...</p>
+
+        </div>
+
+        <!-- INPUT AREA -->
         <div class="input-area">
 
             <input
                 type="text"
                 id="user-input"
                 placeholder="Message Abgrade..."
+                autocomplete="off"
             >
 
-            <button onclick="sendMessage()">
+            <button id="send-btn" onclick="sendMessage()">
                 ➤
             </button>
 
@@ -39,6 +77,7 @@
 
     </div>
 
+    <!-- JAVASCRIPT -->
     <script src="/script.js"></script>
 
 </body>

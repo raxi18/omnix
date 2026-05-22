@@ -1,11 +1,14 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
+import os
 
 app = Flask(__name__)
 
 # HOME PAGE
 @app.route("/")
 def home():
-    return render_template("index.html")
+
+    with open("index.html", "r", encoding="utf-8") as file:
+        return file.read()
 
 
 # CHAT SYSTEM
@@ -16,7 +19,6 @@ def chat():
 
     user_message = data["message"].lower()
 
-    # BASIC AI LOGIC
     if "hi" in user_message:
         reply = "Yo 👋 I'm Abgrade."
 
@@ -26,15 +28,26 @@ def chat():
     elif "bye" in user_message:
         reply = "See you soon ⚡"
 
-    elif "how are you" in user_message:
-        reply = "Systems stable. Energy levels optimal."
-
     else:
         reply = f"You said: {user_message}"
 
     return jsonify({
         "reply": reply
     })
+
+
+# CSS FILE
+@app.route("/style.css")
+def style():
+    with open("style.css", "r", encoding="utf-8") as file:
+        return file.read(), 200, {'Content-Type': 'text/css'}
+
+
+# JS FILE
+@app.route("/script.js")
+def script():
+    with open("script.js", "r", encoding="utf-8") as file:
+        return file.read(), 200, {'Content-Type': 'application/javascript'}
 
 
 # RUN APP

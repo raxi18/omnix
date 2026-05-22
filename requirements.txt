@@ -1,5 +1,3 @@
 Flask
 gunicorn
-goflask
 openai
-python-dotenvogle-generativeai

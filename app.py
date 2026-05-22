@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 
 # =========================================
-# LOAD ENV
+# LOAD ENV VARIABLES
 # =========================================
 
 load_dotenv()
@@ -33,7 +33,7 @@ client = OpenAI(
 )
 
 # =========================================
-# DATABASE
+# DATABASE SETUP
 # =========================================
 
 conn = sqlite3.connect(
@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS memories (
     ai_reply TEXT,
 
     timestamp TEXT
+
 )
 
 """)
@@ -105,7 +106,7 @@ def get_recent_memories(limit=6):
     return cursor.fetchall()
 
 # =========================================
-# HOME
+# HOME PAGE
 # =========================================
 
 @app.route("/")
@@ -116,7 +117,7 @@ def home():
         return file.read()
 
 # =========================================
-# CHAT
+# CHAT SYSTEM
 # =========================================
 
 @app.route("/chat", methods=["POST"])
@@ -129,7 +130,7 @@ def chat():
         user_message = data.get("message", "")
 
         # =====================================
-        # MEMORY
+        # LOAD MEMORY
         # =====================================
 
         memories = get_recent_memories()
@@ -162,16 +163,23 @@ You are:
 - natural
 - slightly playful
 
+You are NOT a basic chatbot.
+
 You are a personal AI operating system.
 
 You help with:
 - productivity
 - schedules
-- tasks
 - reminders
+- focus
 - life management
+- organization
 
-Keep responses realistic and conversational.
+You speak naturally and realistically.
+
+Keep answers conversational,
+short-medium length,
+and human-like.
 
 Recent Conversation:
 {memory_text}
@@ -197,9 +205,11 @@ Recent Conversation:
                     "role": "user",
                     "content": user_message
                 }
+
             ],
 
-            temperature=0.7
+            temperature=0.7,
+            max_tokens=300
         )
 
         ai_reply = response.choices[0].message.content
@@ -217,11 +227,11 @@ Recent Conversation:
     except Exception as e:
 
         return jsonify({
-            "reply": f"Error: {str(e)}"
-        })
+            "reply": str(e)
+        }), 500
 
 # =========================================
-# CSS
+# CSS FILE
 # =========================================
 
 @app.route("/style.css")
@@ -230,11 +240,11 @@ def style():
     with open("style.css", "r", encoding="utf-8") as file:
 
         return file.read(), 200, {
-            'Content-Type': 'text/css'
+            "Content-Type": "text/css"
         }
 
 # =========================================
-# JS
+# JAVASCRIPT FILE
 # =========================================
 
 @app.route("/script.js")
@@ -243,13 +253,29 @@ def script():
     with open("script.js", "r", encoding="utf-8") as file:
 
         return file.read(), 200, {
-            'Content-Type': 'application/javascript'
+            "Content-Type": "application/javascript"
         }
 
 # =========================================
-# RUN
+# HEALTH CHECK
+# =========================================
+
+@app.route("/health")
+def health():
+
+    return jsonify({
+        "status": "Abgrade online"
+    })
+
+# =========================================
+# RUN SERVER
 # =========================================
 
 if __name__ == "__main__":
 
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )

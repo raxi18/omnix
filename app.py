@@ -1,7 +1,19 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from openai import OpenAI
+from dotenv import load_dotenv
+
 import sqlite3
+import os
+
 from datetime import datetime
+
+# =========================================
+# LOAD ENV
+# =========================================
+
+load_dotenv()
+
+API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # =========================================
 # APP SETUP
@@ -10,31 +22,40 @@ from datetime import datetime
 app = Flask(__name__)
 
 # =========================================
-# GEMINI SETUP
+# OPENROUTER CLIENT
 # =========================================
 
-API_KEY = "YOUR_GEMINI_API_KEY"
+client = OpenAI(
 
-genai.configure(api_key=API_KEY)
+    base_url="https://openrouter.ai/api/v1",
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+    api_key=API_KEY
+)
 
 # =========================================
-# DATABASE SETUP
+# DATABASE
 # =========================================
 
-conn = sqlite3.connect("abgrade.db", check_same_thread=False)
+conn = sqlite3.connect(
+    "abgrade.db",
+    check_same_thread=False
+)
 
 cursor = conn.cursor()
 
-# MEMORY TABLE
 cursor.execute("""
+
 CREATE TABLE IF NOT EXISTS memories (
+
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+
     user_message TEXT,
+
     ai_reply TEXT,
+
     timestamp TEXT
 )
+
 """)
 
 conn.commit()
@@ -46,12 +67,17 @@ conn.commit()
 def save_memory(user_message, ai_reply):
 
     cursor.execute("""
+
     INSERT INTO memories (
+
         user_message,
         ai_reply,
         timestamp
+
     )
+
     VALUES (?, ?, ?)
+
     """, (
 
         user_message,
@@ -65,26 +91,32 @@ def save_memory(user_message, ai_reply):
 def get_recent_memories(limit=6):
 
     cursor.execute("""
+
     SELECT user_message, ai_reply
+
     FROM memories
+
     ORDER BY id DESC
+
     LIMIT ?
+
     """, (limit,))
 
     return cursor.fetchall()
 
 # =========================================
-# HOME PAGE
+# HOME
 # =========================================
 
 @app.route("/")
 def home():
 
     with open("index.html", "r", encoding="utf-8") as file:
+
         return file.read()
 
 # =========================================
-# CHAT SYSTEM
+# CHAT
 # =========================================
 
 @app.route("/chat", methods=["POST"])
@@ -96,7 +128,10 @@ def chat():
 
         user_message = data.get("message", "")
 
-        # GET MEMORY
+        # =====================================
+        # MEMORY
+        # =====================================
+
         memories = get_recent_memories()
 
         memory_text = ""
@@ -104,12 +139,18 @@ def chat():
         for memory in reversed(memories):
 
             memory_text += f"""
+
 User: {memory[0]}
+
 Abgrade: {memory[1]}
+
 """
 
+        # =====================================
         # SYSTEM PROMPT
-        prompt = f"""
+        # =====================================
+
+        system_prompt = f"""
 
 You are Abgrade AI.
 
@@ -118,32 +159,55 @@ You are:
 - intelligent
 - calm
 - proactive
-- human-like
+- natural
 - slightly playful
 
-You are not a basic chatbot.
+You are a personal AI operating system.
 
-You are a personal AI operating system
-that helps manage the user's life,
-tasks, schedule, productivity,
-and notifications.
+You help with:
+- productivity
+- schedules
+- tasks
+- reminders
+- life management
 
-Keep responses natural and realistic.
+Keep responses realistic and conversational.
 
 Recent Conversation:
 {memory_text}
 
-Current User Message:
-{user_message}
-
 """
 
-        # GEMINI RESPONSE
-        response = model.generate_content(prompt)
+        # =====================================
+        # AI RESPONSE
+        # =====================================
 
-        ai_reply = response.text
+        response = client.chat.completions.create(
 
+            model="google/gemma-3-4b-it",
+
+            messages=[
+
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ],
+
+            temperature=0.7
+        )
+
+        ai_reply = response.choices[0].message.content
+
+        # =====================================
         # SAVE MEMORY
+        # =====================================
+
         save_memory(user_message, ai_reply)
 
         return jsonify({
@@ -157,7 +221,7 @@ Current User Message:
         })
 
 # =========================================
-# CSS FILE
+# CSS
 # =========================================
 
 @app.route("/style.css")
@@ -170,7 +234,7 @@ def style():
         }
 
 # =========================================
-# JAVASCRIPT FILE
+# JS
 # =========================================
 
 @app.route("/script.js")
@@ -183,7 +247,7 @@ def script():
         }
 
 # =========================================
-# RUN SERVER
+# RUN
 # =========================================
 
 if __name__ == "__main__":

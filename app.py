@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 import sqlite3
 import os
+import traceback
 
 from datetime import datetime
 
@@ -14,6 +15,9 @@ from datetime import datetime
 load_dotenv()
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+if not API_KEY:
+    raise ValueError("OPENROUTER_API_KEY is missing")
 
 # =========================================
 # APP SETUP
@@ -26,10 +30,12 @@ app = Flask(__name__)
 # =========================================
 
 client = OpenAI(
-
     base_url="https://openrouter.ai/api/v1",
-
-    api_key=API_KEY
+    api_key=API_KEY,
+    default_headers={
+        "HTTP-Referer": "http://localhost:5000",
+        "X-Title": "Abgrade AI"
+    }
 )
 
 # =========================================
@@ -113,7 +119,6 @@ def get_recent_memories(limit=6):
 def home():
 
     with open("index.html", "r", encoding="utf-8") as file:
-
         return file.read()
 
 # =========================================
@@ -155,31 +160,14 @@ Abgrade: {memory[1]}
 
 You are Abgrade AI.
 
-You are:
-- futuristic
-- intelligent
-- calm
-- proactive
-- natural
-- slightly playful
-
-You are NOT a basic chatbot.
+You are futuristic, intelligent,
+calm, proactive, natural,
+and slightly playful.
 
 You are a personal AI operating system.
 
-You help with:
-- productivity
-- schedules
-- reminders
-- focus
-- life management
-- organization
-
-You speak naturally and realistically.
-
-Keep answers conversational,
-short-medium length,
-and human-like.
+Keep responses conversational,
+human-like, and concise.
 
 Recent Conversation:
 {memory_text}
@@ -212,7 +200,7 @@ Recent Conversation:
             max_tokens=300
         )
 
-        ai_reply = response.choices[0].message.content
+        ai_reply = response.choices[0].message.content or "No response."
 
         # =====================================
         # SAVE MEMORY
@@ -225,6 +213,8 @@ Recent Conversation:
         })
 
     except Exception as e:
+
+        traceback.print_exc()
 
         return jsonify({
             "reply": str(e)
